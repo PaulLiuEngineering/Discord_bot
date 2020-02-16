@@ -1,0 +1,135 @@
+module.exports = {
+  name: 'music',
+  description : "Gives weather info",
+  execute(message,args,servers){
+      function play(connection, message){
+          var server = servers[message.guild.id];
+          if (server.queue[0] === ''){
+              server.queue.shift();
+          }
+          try{
+              server.dispatcher = connection.playStream(ytdl(server.queue[0], {fitler: 'audioonly'}));
+              console.log(server.queue[0])
+              server.queue.shift();
+              server.dispatcher.on('end', function(){
+                  if (server.queue[0]){
+                      play(connection,message);
+                  }
+                  else{
+                      connection.disconnect();
+                  }
+              });
+          }
+          catch(error){
+              //console.log(error)
+              message.reply("Song doesn't exist")
+              message.guild.voiceConnection.disconnect()
+              return;
+          }
+
+      }
+
+      function parselink(args, $){
+          var link = ''
+          var options = {
+              url: "https://www.youtube.com/results?search_query="+ args,
+              method : "GET",
+              headers:{
+                  "Accept": "text/html",
+                  "User-Agent":"Chrome"
+              }
+          };
+          request(options,function(error, response, responsebody){
+              if(error){
+                  return;
+              }
+              $ = cheerio.load(responsebody)
+              var links = $('a.yt-uix-tile-link');
+              for (i = 0; i < links.length; i++) {
+                  if(links[i]['attribs']['href']){
+                      //console.log(links[i]['attribs']['href'])
+                      link = 'https://www.youtube.com'+links[i]['attribs']['href']
+                      //server.queue.push(link);
+                      //console.log(link)
+                              
+                      i = links.length;
+                  }
+              }
+              console.log(link)
+          })
+          return link;
+      }
+      var d = new Date();
+      console.log(d.getTime());
+      if (args.length < 2){
+          message.reply("Please enter a song")
+          return;
+      }
+      if (!message.member.voiceChannel){
+          message.channel.send("You must be in a voice channel");
+          return;
+      }
+      if(!servers[message.guild.id]) servers[message.guild.id]={
+          queue : []
+      }
+      var link = ''
+      if (!args.startsWith('https')){
+          var options = {
+              url: "https://www.youtube.com/results?search_query="+ args,
+              method : "GET",
+              headers:{
+                  "Accept": "text/html",
+                  "User-Agent":"Chrome"
+              }
+          };
+          request(options,function(error, response, responsebody){
+              if(error){
+                  return;
+              }
+              $ = cheerio.load(responsebody)
+              var links = $('a.yt-uix-tile-link');
+              for (i = 0; i < links.length; i++) {
+                  if(links[i]['attribs']['href']){
+                      //console.log(links[i]['attribs']['href'])
+                      link = 'https://www.youtube.com'+links[i]['attribs']['href']
+                      //server.queue.push(link);
+                      //console.log(link)
+                      i = links.length;
+                  }
+              }
+              console.log(link,d.getTime())
+          })
+      }
+      var server = servers[message.guild.id];
+      // var link = '';
+      // link_case = args.startsWith('http')
+      // switch (link_case){
+      //     case true:
+      //         link = args
+      //         //console.log(server.queue)
+      //     break
+      //     case false:
+      //         link = parselink(args)
+      //     break
+      // }
+      if (args.startsWith('http')){
+          server.queue.push(args)
+      }
+      else{
+          server.queue.push(link)
+      }
+      // server.queue.push(link)
+      
+      console.log(server.queue,args,'tag1')
+      if(!message.guild.voiceConnection) message.member.voiceChannel.join().then(function(connection){
+          if (server.queue.length > 0){
+              try{
+                  play(connection, message);
+              }
+              catch(error){
+                  console.log(error)
+              }
+          }
+      })
+      
+  },
