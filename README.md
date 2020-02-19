@@ -4,4 +4,4 @@
   -Improved music quality and lagging issues.\
   -Fixed the issue of bot leaving before the song finishes playing.
 # v0.5.0 
-  Initial commit, functionality: weather, truck, cursed, music(play, skip, stop, clear)
+  -Initial commit, functionality: weather, truck, cursed, music(play, skip, stop, clear)
