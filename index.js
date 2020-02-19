@@ -9,7 +9,7 @@ var servers = {};
 const ytdl = require('ytdl-core');
 
 
-const token = 'Njc3MzMyNjg4MTc2MjgzNjUy.XkSvsw.C30uxKXYBu6dxUoX5L9kuhj9KX4';
+const token = '';
 const PREFIX = "!";
 
 const fs = require('fs');
@@ -70,6 +70,9 @@ bot.on('message',message=>{
         break
         case "cursed":
             bot.commands.get('cursed').execute(message);
+        break
+        case "smite":
+            bot.commands.get('smite').execute(message,utf.encode(args.slice(1,args.length).join(' ')));
         break
     }
 })

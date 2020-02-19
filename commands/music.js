@@ -14,7 +14,7 @@ module.exports = {
                 server.queue.shift();
             }
             try{
-                server.dispatcher = connection.playStream(ytdl(server.queue[0], {fitler: 'audioonly'}),{ passes : 5});
+                server.dispatcher = connection.playStream(ytdl(server.queue[0], {filter: 'audioonly', quality: 'highestaudio', highWaterMark: 1<<25 }), {highWaterMark: 1});
                 console.log(server.queue[0])
                 server.queue.shift();
                 server.dispatcher.on('end', function(){
@@ -34,6 +34,42 @@ module.exports = {
                 return;
             }
 
+        }
+
+        function getembed(link,thumbnail,title,duration,message){
+            const music_embed = {
+                color: 0x0099ff,
+                title: 'Song Info',
+                url: 'https://discord.js.org',
+                author: {
+                    name: 'Butler_bot',
+                    //icon_url: 'https://i.imgur.com/wSTFkRM.png',
+                    //url: 'https://discord.js.org',
+                },
+                //description: 'Some description here',
+                thumbnail: {
+                    url: thumbnail,
+                },
+                fields: [
+                    {
+                        name: 'YouTube Link:',
+                        value: link,
+                    },
+                    {
+                        name: 'Song title:',
+                        value: title,
+                    },
+                    {
+                        name: 'Duration:',
+                        value: duration,
+                    },
+                ],
+                // image: {
+                //     url: `http://openweathermap.org/img/wn/${weather.weather[0].icon}@2x.png`,
+                // },
+                timestamp: new Date(),
+            };
+            message.channel.send({ embed: music_embed});
         }
         if (args.length < 2){
             message.reply("Please enter a song")
@@ -62,14 +98,22 @@ module.exports = {
                     return;
                 }
                 $ = cheerio.load(responsebody)
-                var links = $('a.yt-uix-tile-link');
+                const links = $('a.yt-uix-tile-link');
+                const thumbnail = $('.yt-thumb-simple');
+                var thumbnail_link = ''
+                var title = ''
+                var duration = ''
                 for (i = 0; i < links.length; i++) {
                     if(links[i]['attribs']['href']){
-                        //console.log(links[i]['attribs']['href'])
+                        console.log($('.accessible-description')[i].children.data)
                         link = 'https://www.youtube.com'+links[i]['attribs']['href']
+                        thumbnail_link = thumbnail[i].children[1]['attribs']['src']
+                        title = links[i]['attribs']['title']
+                        duration = $('.accessible-description')[i].children[0]['data']
                         //server.queue.push(link);
-                        //console.log(link)
+                        //console.log(thumbnail_link,title,duration,message)
                         i = links.length;
+                        getembed(link,thumbnail_link, title, duration,message)
                     }
                 }
                 //console.log('request')
